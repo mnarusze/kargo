@@ -1,4 +1,5 @@
 stages:
+  - deploy-gce
   - unit-tests
   - local-deployment
   - calico
@@ -38,6 +39,94 @@ before_script:
 .create_cluster: &create_cluster
   <<: *job
   <<: *docker_service
+
+.gce_variables: &gce_variables
+  GCE_USER: travis
+  SSH_USER: $GCE_USER
+  TEST_ID: "$CI_BUILD_ID"
+  CONTAINER_ENGINE: docker
+  PRIVATE_KEY: $GCE_PRIVATE_KEY
+  GS_ACCESS_KEY_ID: $GS_KEY
+  GS_SECRET_ACCESS_KEY: $GS_SECRET
+  ANSIBLE_KEEP_REMOTE_FILES: "1"
+  CLUSTER_MODE: default
+  BOOTSTRAP_OS: none
+
+
+.gce: &gce
+  <<: *job
+  stage: deploy-gce
+  before_script:
+    - pip install ansible==2.1.3.0
+    - pip install netaddr
+    - pip install apache-libcloud==0.20.1
+    - pip install boto==2.9.0
+    - mkdir -p /.ssh
+    - cp tests/ansible.cfg .
+    - mkdir -p $HOME/.ssh
+    - echo $PRIVATE_KEY | base64 -d > $HOME/.ssh/id_rsa
+    - echo $GCE_PEM_FILE | base64 -d > $HOME/.ssh/gce
+    - chmod 400 $HOME/.ssh/id_rsa
+    - ansible-playbook --version
+    - cp tests/ansible.cfg .
+    - export PYPATH=$([ $BOOTSTRAP_OS = none ] && echo /usr/bin/python || echo /opt/bin/python)
+  script:
+    - pwd
+    - ls
+    - >
+      ansible-playbook tests/cloud_playbooks/create-gce.yml -i tests/local_inventory/hosts.cfg -c local $LOG_LEVEL
+      -e mode=${CLUSTER_MODE}
+      -e test_id=${TEST_ID}
+      -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
+      -e gce_project_id=${GCE_PROJECT_ID}
+      -e gce_service_account_email=${GCE_ACCOUNT}
+      -e gce_pem_file=${HOME}/.ssh/gce
+      -e cloud_image=${CLOUD_IMAGE}
+      -e inventory_path=${PWD}/inventory/inventory.ini
+      -e cloud_region=${CLOUD_REGION}
+
+    # Create cluster
+    - >
+      ansible-playbook -i inventory/inventory.ini -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS
+      -b --become-user=root -e cloud_provider=gce  $LOG_LEVEL -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
+      -e bootstrap_os=${BOOTSTRAP_OS}
+      -e ansible_python_interpreter=${PYPATH}
+      -e download_run_once=true
+      -e download_localhost=true
+      -e local_release_dir=/var/tmp/releases
+      cluster.yml
+
+    # Tests Cases
+    ## Test Master API
+    - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} tests/testcases/010_check-apiserver.yml $LOG_LEVEL
+
+    ## Create a POD
+    - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS -b --become-user=root tests/testcases/020_check-create-pod.yml $LOG_LEVEL
+
+    ## Ping the between 2 pod
+    - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS -b --become-user=root tests/testcases/030_check-network.yml $LOG_LEVEL
+
+  after_script:
+    - >
+      ansible-playbook -i inventory/inventory.ini tests/cloud_playbooks/delete-gce.yml -c local  $LOG_LEVEL
+      -e test_id=${TEST_ID}
+      -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
+      -e gce_project_id=${GCE_PROJECT_ID}
+      -e gce_service_account_email=${GCE_ACCOUNT}
+      -e gce_pem_file=${HOME}/.ssh/gce
+      -e cloud_image=${CLOUD_IMAGE}
+      -e inventory_path=${PWD}/inventory/inventory.ini
+      -e cloud_region=${CLOUD_REGION}
+
+gce-ubuntu:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: canal
+    CLOUD_IMAGE: debian-8-kubespray
+    CLOUD_REGION: europe-west1-d
+    CLUSTER_MODE: default
 
 
 syntax-check:
