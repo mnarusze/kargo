@@ -9,7 +9,9 @@ stages:
 
 variables:
   FAILFASTCI_NAMESPACE: 'kargo-ci'
-
+  DOCKER_DRIVER: overlay
+  DOCKER_HOST: tcp://localhost:2375
+  ANSIBLE_FORCE_COLOR: "true"
 
 cache:
   paths:
@@ -30,9 +32,6 @@ before_script:
   image: quay.io/ant31/kargo:master
 
 .docker_service: &docker_service
-  variables:
-    DOCKER_DRIVER: overlay
-    DOCKER_HOST: tcp://localhost:2375
   services:
      - docker:dind
 
@@ -55,6 +54,7 @@ before_script:
 
 .gce: &gce
   <<: *job
+  <<: *docker_service
   stage: deploy-gce
   before_script:
     - pip install ansible==2.1.3.0
@@ -119,15 +119,15 @@ before_script:
       -e inventory_path=${PWD}/inventory/inventory.ini
       -e cloud_region=${CLOUD_REGION}
 
-debian8-canal:
-  <<: *job
-  <<: *gce
-  variables:
-    <<: *gce_variables
-    KUBE_NETWORK_PLUGIN: canal
-    CLOUD_IMAGE: debian-8-kubespray
-    CLOUD_REGION: europe-west1-d
-    CLUSTER_MODE: default
+# debian8-canal:
+#   <<: *job
+#   <<: *gce
+#   variables:
+#     <<: *gce_variables
+#     KUBE_NETWORK_PLUGIN: canal
+#     CLOUD_IMAGE: debian-8-kubespray
+#     CLOUD_REGION: europe-west1-d
+#     CLUSTER_MODE: default
 
 debian8-calico:
   <<: *job
@@ -149,15 +149,15 @@ centos7-flannel:
     CLOUD_REGION: europe-west1-d
     CLUSTER_MODE: default
 
-centos7-calico:
-  <<: *job
-  <<: *gce
-  variables:
-    <<: *gce_variables
-    KUBE_NETWORK_PLUGIN: flannel
-    CLOUD_IMAGE: centos-7
-    CLOUD_REGION: europe-west1-d
-    CLUSTER_MODE: default
+# centos7-calico:
+#   <<: *job
+#   <<: *gce
+#   variables:
+#     <<: *gce_variables
+#     KUBE_NETWORK_PLUGIN: calico
+#     CLOUD_IMAGE: centos-7
+#     CLOUD_REGION: europe-west1-d
+#     CLUSTER_MODE: default
 
 rhel7-weave:
   <<: *job
