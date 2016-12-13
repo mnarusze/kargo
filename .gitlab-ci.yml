@@ -119,7 +119,7 @@ before_script:
       -e inventory_path=${PWD}/inventory/inventory.ini
       -e cloud_region=${CLOUD_REGION}
 
-gce-ubuntu:
+debian8-canal:
   <<: *job
   <<: *gce
   variables:
@@ -128,6 +128,57 @@ gce-ubuntu:
     CLOUD_IMAGE: debian-8-kubespray
     CLOUD_REGION: europe-west1-d
     CLUSTER_MODE: default
+
+debian8-calico:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: calico
+    CLOUD_IMAGE: debian-8-kubespray
+    CLOUD_REGION: us-central1-b
+    CLUSTER_MODE: default
+
+centos7-flannel:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: flannel
+    CLOUD_IMAGE: centos-7
+    CLOUD_REGION: europe-west1-d
+    CLUSTER_MODE: default
+
+centos7-calico:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: flannel
+    CLOUD_IMAGE: centos-7
+    CLOUD_REGION: europe-west1-d
+    CLUSTER_MODE: default
+
+rhel7-weave:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: weave
+    CLOUD_IMAGE: rhel-7
+    CLOUD_REGION: europe-west1-b
+    CLUSTER_MODE: default
+
+coreos-canal:
+  <<: *job
+  <<: *gce
+  variables:
+    <<: *gce_variables
+    KUBE_NETWORK_PLUGIN: canal
+    CLOUD_IMAGE: coreos-stable
+    CLOUD_REGION: us-east1-d
+    CLUSTER_MODE: default
+    BOOTSTRAP_OS: coreos
 
 
 syntax-check:
