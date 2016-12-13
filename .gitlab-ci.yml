@@ -66,6 +66,7 @@ before_script:
     - mkdir -p $HOME/.ssh
     - echo $PRIVATE_KEY | base64 -d > $HOME/.ssh/id_rsa
     - echo $GCE_PEM_FILE | base64 -d > $HOME/.ssh/gce
+    - echo $GCE_CREDENTIALS > $HOME/.ssh/gce.json
     - chmod 400 $HOME/.ssh/id_rsa
     - ansible-playbook --version
     - cp tests/ansible.cfg .
@@ -80,7 +81,7 @@ before_script:
       -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
       -e gce_project_id=${GCE_PROJECT_ID}
       -e gce_service_account_email=${GCE_ACCOUNT}
-      -e gce_pem_file=${HOME}/.ssh/gce
+      -e gce_credentials_file=${HOME}/.ssh/gce.json
       -e cloud_image=${CLOUD_IMAGE}
       -e inventory_path=${PWD}/inventory/inventory.ini
       -e cloud_region=${CLOUD_REGION}
@@ -113,7 +114,7 @@ before_script:
       -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
       -e gce_project_id=${GCE_PROJECT_ID}
       -e gce_service_account_email=${GCE_ACCOUNT}
-      -e gce_pem_file=${HOME}/.ssh/gce
+      -e gce_credentials_file=${HOME}/.ssh/gce.json
       -e cloud_image=${CLOUD_IMAGE}
       -e inventory_path=${PWD}/inventory/inventory.ini
       -e cloud_region=${CLOUD_REGION}
