@@ -12,9 +12,6 @@ variables:
   DOCKER_HOST: tcp://localhost:2375
   ANSIBLE_FORCE_COLOR: "true"
 
-cache:
-  paths:
-    - cache
 
 before_script:
     - pip install ansible
@@ -54,6 +51,11 @@ before_script:
 .gce: &gce
   <<: *job
   <<: *docker_service
+  cache:
+    key: "$CI_PROJECT_NAME"
+    untracked: true
+    paths:
+      - downloads/
   stage: deploy-gce
   before_script:
     - pip install ansible==2.1.3.0
@@ -73,6 +75,7 @@ before_script:
   script:
     - pwd
     - ls
+    - echo ${PWD}
     - >
       ansible-playbook tests/cloud_playbooks/create-gce.yml -i tests/local_inventory/hosts.cfg -c local $LOG_LEVEL
       -e mode=${CLUSTER_MODE}
@@ -93,7 +96,7 @@ before_script:
       -e ansible_python_interpreter=${PYPATH}
       -e download_run_once=true
       -e download_localhost=true
-      -e local_release_dir=/var/tmp/releases
+      -e local_release_dir=${PWD}/downloads/releases
       cluster.yml
 
     # Tests Cases
