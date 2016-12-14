@@ -90,14 +90,24 @@ before_script:
 
     # Create cluster
     - >
+      echo "ansible-playbook -i inventory/inventory.ini -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS
+      -b --become-user=root -e cloud_provider=gce $LOG_LEVEL -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
+      -e bootstrap_os=${BOOTSTRAP_OS}
+      -e ansible_python_interpreter=${PYPATH}
+      -e download_run_once=true
+      -e download_localhost=true
+      -e local_release_dir=${PWD}/downloads/releases
+      cluster.yml"
+    - >
       ansible-playbook -i inventory/inventory.ini -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS
-      -b --become-user=root -e cloud_provider=gce  $LOG_LEVEL -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
+      -b --become-user=root -e cloud_provider=gce -vvv -e kube_network_plugin=${KUBE_NETWORK_PLUGIN}
       -e bootstrap_os=${BOOTSTRAP_OS}
       -e ansible_python_interpreter=${PYPATH}
       -e download_run_once=true
       -e download_localhost=true
       -e local_release_dir=${PWD}/downloads/releases
       cluster.yml
+
 
     # Tests Cases
     ## Test Master API
