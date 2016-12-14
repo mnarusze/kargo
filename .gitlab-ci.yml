@@ -42,7 +42,7 @@ before_script:
 .gce_variables: &gce_variables
   GCE_USER: travis
   SSH_USER: $GCE_USER
-  TEST_ID: "$CI_BUILD_ID"
+  TEST_ID: "$CI_PIPELINE_ID-$CI_BUILD_ID"
   CONTAINER_ENGINE: docker
   PRIVATE_KEY: $GCE_PRIVATE_KEY
   GS_ACCESS_KEY_ID: $GS_KEY
