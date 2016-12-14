@@ -99,7 +99,7 @@ before_script:
 
     # Tests Cases
     ## Test Master API
-    - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} tests/testcases/010_check-apiserver.yml $LOG_LEVEL
+    - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS -b --become-user=root tests/testcases/010_check-apiserver.yml $LOG_LEVEL
 
     ## Create a POD
     - ansible-playbook -i inventory/inventory.ini -e ansible_python_interpreter=${PYPATH} -u $SSH_USER -e ansible_ssh_user=$SSH_USER $SSH_ARGS -b --become-user=root tests/testcases/020_check-create-pod.yml $LOG_LEVEL
