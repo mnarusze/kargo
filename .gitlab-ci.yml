@@ -9,7 +9,6 @@ stages:
 
 variables:
   FAILFASTCI_NAMESPACE: 'kargo-ci'
-  DOCKER_DRIVER: overlay
   DOCKER_HOST: tcp://localhost:2375
   ANSIBLE_FORCE_COLOR: "true"
 
